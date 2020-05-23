@@ -1,7 +1,0 @@
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\bin\Debug\TestApp2Process.exe.config
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\bin\Debug\TestApp2Process.exe
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\bin\Debug\TestApp2Process.pdb
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\obj\Debug\TestApp2Process.csprojAssemblyReference.cache
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\obj\Debug\TestApp2Process.csproj.CoreCompileInputs.cache
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\obj\Debug\TestApp2Process.exe
-C:\Users\Александр\source\repos\TestApp2Process\TestApp2Process\obj\Debug\TestApp2Process.pdb
