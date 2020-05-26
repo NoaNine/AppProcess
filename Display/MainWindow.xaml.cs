@@ -23,11 +23,11 @@ namespace Display
     /// </summary>
     public partial class ProcessManager : Window, INotifyPropertyChanged
     {
-        private List<Process> _processList = new List<Process>();
-        ProcessInfo _selectedProcess = new ProcessInfo();
-        public List<Process> ProcessList { get => _processList; }
-        public ProcessInfo SelectedProcess { get => _selectedProcess; }
-        public string SelectedProcessName
+        private List<Process> _processList = new List<Process>(); //список всех процессов
+        ProcessInfo _selectedProcess = new ProcessInfo(); // процесс, который выбран в списке по клику
+        public List<Process> ProcessList { get => _processList; } // проперти, дает доступ к _processList
+        public ProcessInfo SelectedProcess { get => _selectedProcess; } // проперти, дает доступ к _selectedProcess
+        public string SelectedProcessName // проперти, дает доступ имени выбранного процесса, нужен для биндинга к интерфейсу
         {
             get
             {
@@ -35,7 +35,7 @@ namespace Display
                 return result;
             }
         }
-        public string SelectedProcessPID
+        public string SelectedProcessPID // проперти, нужен для биндинга к интерфейсу
         {
             get
             {
@@ -43,50 +43,56 @@ namespace Display
                 return result;
             }
         }
-        public string SelectedProcessWindow { get => _selectedProcess.Window; }
-        public List<string> SelectedProcessModules { get => _selectedProcess.ModulesNames; }
+        public string SelectedProcessWindow { get => _selectedProcess.Window; } // проперти, нужен для биндинга к интерфейсу
+        public List<string> SelectedProcessModules { get => _selectedProcess.ModulesNames; } // проперти, нужен для биндинга к интерфейсу
         public ProcessManager()
         {
-            InitializeComponent();
-            Task.Run(() => RefreshProcessList());
+            InitializeComponent(); // инициализация интерфейса, сгенерировано вижуал студией
+            Task.Run(() => RefreshProcessList()); // запуск отдельного потока, в котором будет работать метод RefreshProcessList()
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged; // событие, сигнализирующее интерфейсу об изменениях в отображаемых данных
 
-        protected void OnPropertyChanged(string name)
+        protected void OnPropertyChanged(string name) // вызов события PropertyChanged
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        private void RefreshProcessList()
+        private void RefreshProcessList() // метод, в котором происходит обновления списка процессов
         {
-            while (true)
+            while (true) // вечный цикл
             {
-                List<Process> processes = Process.GetProcesses().ToList();
-                if (_processList.Count == 0)
+                List<Process> processes = Process.GetProcesses().ToList(); // в новую переменную записываем все текущии процессы
+                if (_processList.Count == 0) // если список _processList был пуст - просто заполняем его
                 {
                     _processList = processes;
+                    OnPropertyChanged("ProcessList"); // вызываем обновление полей, забинженых на проперти ProcessList
                 }
-                else if (_processList.Intersect(processes).Count() != _processList.Count)
+                // если пересечение списков processes и _processList не равно количесву элементов в обоих этих списках, то значит список
+                // _processList просрочен и его надо обновит
+                else if (_processList.Intersect(processes).Count() != _processList.Count && _processList.Count != processes.Count)
                 {
                     _processList = processes;
-                    OnPropertyChanged("ProcessList");
+                    OnPropertyChanged("ProcessList"); // вызываем обновление полей, забинженых на проперти ProcessList
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(1000); // останавливаем поток на одну секунду
             }
         }
-
+        // событие, вызываемое при клике на текст
         private void TextBlock_GotFocus(object sender, RoutedEventArgs e)
         {
-            TextBlock textBlock = (TextBlock)sender;
-            if(textBlock != null)
+            TextBlock textBlock = (TextBlock)sender; // sender - объект, в котором произошел клик, т.е. TextBlock. 
+                                                    //По-этому sender мы можен привести к типу TextBlock 
+            if(textBlock != null) // если приведение типов прошло успешно
             {
-                string processName = textBlock.Text;
-                Process selectedProcess = _processList.FirstOrDefault(process => process.ProcessName == processName);
-                if(selectedProcess != null)
+                string processName = textBlock.Text; //берем имя вібранного процесса
+                Process selectedProcess = _processList.FirstOrDefault(process => process.ProcessName == processName); // находим в списке _processList
+                                                                                                                        // процесс с именем processName
+                if(selectedProcess != null) // если искомій процесс существует
                 {
                     try
                     {
-                        _selectedProcess = ProcessInfoAccessor.GetInfo(selectedProcess);
+                        _selectedProcess = ProcessInfoAccessor.GetInfo(selectedProcess); // достаем инфу о процессе
+                        // уведомляем интерфейс о том, что даннsе измененs
                         OnPropertyChanged("SelectedProcess");
                         OnPropertyChanged("SelectedProcessName");
                         OnPropertyChanged("SelectedProcessPID");
@@ -101,8 +107,8 @@ namespace Display
             }
         }
     }
-
-    public class ProcessInfoAccessor
+    // класс, созданный для удобства - выдает объект с удобно-отформатированной инфой о конкретном процессе
+    public class ProcessInfoAccessor 
     {
         public static ProcessInfo GetInfo (Process process)
         {
@@ -110,23 +116,25 @@ namespace Display
         }
 
     }
-
+    
+    //класс, созданный для удобства - содержит удобно-отформатированную инфу о конкретном процессе
     public class ProcessInfo
     {
-        public ProcessInfo()
+        public ProcessInfo() // конструктор без параметров, нужен при старте проги
         {
             Name = string.Empty;
             PID = string.Empty;
             Window = string.Empty;
             ProcessModuleCollection = null;
         }
+        // конструктор с параметрами - должен пополняться по мере увеличения кол-ва необходимых полей
         public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection)
         {
             Name = name;
             PID = pid;
             Window = window;
             ProcessModuleCollection = processModuleCollection;
-            foreach(ProcessModule module in processModuleCollection)
+            foreach(ProcessModule module in processModuleCollection) // создаем список модулей, которые используются процессом
             {
                 _modulesNames.Add(module.FileName);
             }
