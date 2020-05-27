@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,9 +19,6 @@ using System.Windows.Shapes;
 
 namespace Display
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class ProcessManager : Window, INotifyPropertyChanged
     {
         private List<Process> _processList = new List<Process>(); //список всех процессов
@@ -31,7 +29,7 @@ namespace Display
         {
             get
             {
-                string result = "Process Name: " + _selectedProcess.Name;
+                string result = "Process Name: " + _selectedProcess.Name; 
                 return result;
             }
         }
@@ -40,6 +38,14 @@ namespace Display
             get
             {
                 string result = "Process PID: " + _selectedProcess.PID;
+                return result;
+            }
+        }
+        public string PathProcess
+        {
+            get
+            {
+                string result = "Path:" + _selectedProcess;
                 return result;
             }
         }
@@ -134,7 +140,7 @@ namespace Display
             PID = pid;
             Window = window;
             ProcessModuleCollection = processModuleCollection;
-            foreach(ProcessModule module in processModuleCollection) // создаем список модулей, которые используются процессом
+            foreach (ProcessModule module in processModuleCollection) // создаем список модулей, которые используются процессом
             {
                 _modulesNames.Add(module.FileName);
             }
