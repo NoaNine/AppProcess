@@ -29,7 +29,7 @@ namespace Display
         {
             get
             {
-                string result = "Process Name: " + _selectedProcess.Name; 
+                string result = "Process Name: " + _selectedProcess.Name;
                 return result;
             }
         }
@@ -37,18 +37,18 @@ namespace Display
         {
             get
             {
-                string result = "Process PID: " + _selectedProcess.PID;
+                string result = /*"Process PID: "*/ _selectedProcess.PID;
                 return result;
             }
         }
-        public string PathProcess
+        /*public string PathProcess
         {
             get
             {
                 string result = "Path:" + _selectedProcess;
                 return result;
             }
-        }
+        }*/
         public string SelectedProcessWindow { get => _selectedProcess.Window; } // проперти, нужен для биндинга к интерфейсу
         public List<string> SelectedProcessModules { get => _selectedProcess.ModulesNames; } // проперти, нужен для биндинга к интерфейсу
         public ProcessManager()
@@ -62,6 +62,21 @@ namespace Display
         protected void OnPropertyChanged(string name) // вызов события PropertyChanged
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            string pid = SelectedProcessPID;
+            Process myProc = null;
+            try
+            {
+                int i = int.Parse(pid);
+                myProc = Process.GetProcessById(i);
+                myProc.Kill();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         private void RefreshProcessList() // метод, в котором происходит обновления списка процессов
         {
