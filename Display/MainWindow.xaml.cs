@@ -37,20 +37,21 @@ namespace Display
         {
             get
             {
-                string result = /*"Process PID: "*/ _selectedProcess.PID;
+                string result = _selectedProcess.PID;
                 return result;
             }
         }
-        /*public string PathProcess
+        public string SelectedMainModule //не работает(
         {
             get
             {
-                string result = "Path:" + _selectedProcess;
+                string result = "Path:" + _selectedProcess.MainModule;
                 return result;
             }
-        }*/
+        }
         public string SelectedProcessWindow { get => _selectedProcess.Window; } // проперти, нужен для биндинга к интерфейсу
         public List<string> SelectedProcessModules { get => _selectedProcess.ModulesNames; } // проперти, нужен для биндинга к интерфейсу
+        public List<string> SelectedProcessThread { get => _selectedProcess.ThreadNames; }
         public ProcessManager()
         {
             InitializeComponent(); // инициализация интерфейса, сгенерировано вижуал студией
@@ -133,7 +134,7 @@ namespace Display
     {
         public static ProcessInfo GetInfo (Process process)
         {
-            return new ProcessInfo(process.ProcessName, process.Id.ToString(), process.MainWindowTitle, process.Modules);
+            return new ProcessInfo(process.ProcessName, process.Id.ToString(), process.MainWindowTitle, process.Modules, process.Threads, process.MainModule.FileName);
         }
 
     }
@@ -146,25 +147,43 @@ namespace Display
             Name = string.Empty;
             PID = string.Empty;
             Window = string.Empty;
+            MainModule = string.Empty;
             ProcessModuleCollection = null;
+            ProcessThreadCollection = null;
         }
         // конструктор с параметрами - должен пополняться по мере увеличения кол-ва необходимых полей
-        public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection)
+        public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection, ProcessThreadCollection processThreadCollection, string mainModule)
         {
             Name = name;
             PID = pid;
             Window = window;
+            MainModule = mainModule;
             ProcessModuleCollection = processModuleCollection;
+            ProcessThreadCollection = processThreadCollection;
             foreach (ProcessModule module in processModuleCollection) // создаем список модулей, которые используются процессом
             {
                 _modulesNames.Add(module.FileName);
             }
+            /*foreach (ProcessThread thread in processThreadCollection)
+            {
+                _threadNames.Add(thread.Id.ToString());
+            }
+            foreach (Process p in window)
+            {
+                _windowTitle.Add(p.MainWindowTitle);
+            }*/
         }
         List<string> _modulesNames = new List<string>();
+        List<string> _threadNames = new List<string>();
+        List<string> _windowTitle = new List<string>();
         public string Name { get; set; }
         public string PID { get; set; }
         public string Window { get; set; }
+        public string MainModule { get; set; }
         ProcessModuleCollection ProcessModuleCollection { get; set; }
+        ProcessThreadCollection ProcessThreadCollection { get; set; }
         public List<string> ModulesNames { get => _modulesNames; }
+        public List<string> ThreadNames { get => _threadNames; } //не работает(
+        public List<string> WindowTitle { get => _windowTitle; } // не работает(
     }
 }
