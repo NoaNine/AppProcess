@@ -37,24 +37,35 @@ namespace Display
         {
             get
             {
-                string result = /*"Process PID: "*/ _selectedProcess.PID;
+                string result = _selectedProcess.PID;
                 return result;
             }
         }
-        /*public string PathProcess
+        public string SelectedMainModule
         {
             get
             {
-                string result = "Path:" + _selectedProcess;
+                string result = "Path:" + _selectedProcess.MainModule;
+                return result;
+            }
+        }
+        /*public string MainWindowTitle
+        {
+            get
+            {
+
+                string result = _selectedProcess.Window;
                 return result;
             }
         }*/
-        public string SelectedProcessWindow { get => _selectedProcess.Window; } // проперти, нужен для биндинга к интерфейсу
+        //public string SelectedProcessWindow { get => _selectedProcess.Window; } // проперти, нужен для биндинга к интерфейсу
         public List<string> SelectedProcessModules { get => _selectedProcess.ModulesNames; } // проперти, нужен для биндинга к интерфейсу
+        public List<string> SelectedProcessThread { get => _selectedProcess.ThreadNames; }
         public ProcessManager()
         {
             InitializeComponent(); // инициализация интерфейса, сгенерировано вижуал студией
             Task.Run(() => RefreshProcessList()); // запуск отдельного потока, в котором будет работать метод RefreshProcessList()
+            ListMainTitle();
         }
 
         public event PropertyChangedEventHandler PropertyChanged; // событие, сигнализирующее интерфейсу об изменениях в отображаемых данных
@@ -98,8 +109,7 @@ namespace Display
                 Thread.Sleep(1000); // останавливаем поток на одну секунду
             }
         }
-        // событие, вызываемое при клике на текст
-        private void TextBlock_GotFocus(object sender, RoutedEventArgs e)
+        private void TextBlock_GotFocus(object sender, RoutedEventArgs e)// событие, вызываемое при клике на текст
         {
             TextBlock textBlock = (TextBlock)sender; // sender - объект, в котором произошел клик, т.е. TextBlock. 
                                                     //По-этому sender мы можен привести к типу TextBlock 
@@ -119,6 +129,8 @@ namespace Display
                         OnPropertyChanged("SelectedProcessPID");
                         OnPropertyChanged("SelectedProcessWindow");
                         OnPropertyChanged("SelectedProcessModules");
+                        OnPropertyChanged("SelectedProcessThread");
+                        OnPropertyChanged("SelectedMainModule");
                     }
                     catch(Exception ex)
                     {
@@ -127,44 +139,65 @@ namespace Display
                 }
             }
         }
+        private void ListMainTitle()
+        {
+            List<Process> processes = Process.GetProcesses().ToList();
+            foreach (Process p in processes)
+            {
+                if (!String.IsNullOrEmpty(p.MainWindowTitle))
+                {
+                    list.Items.Add(p.MainWindowTitle);
+                }
+            }
+        }
     }
-    // класс, созданный для удобства - выдает объект с удобно-отформатированной инфой о конкретном процессе
     public class ProcessInfoAccessor 
+    // класс, созданный для удобства - выдает объект с удобно-отформатированной инфой о конкретном процессе
     {
         public static ProcessInfo GetInfo (Process process)
         {
-            return new ProcessInfo(process.ProcessName, process.Id.ToString(), process.MainWindowTitle, process.Modules);
+            return new ProcessInfo(process.ProcessName, process.Id.ToString(), process.MainWindowTitle, process.Modules, process.Threads, process.MainModule.FileName);
         }
-
     }
-    
+    public class ProcessInfo 
     //класс, созданный для удобства - содержит удобно-отформатированную инфу о конкретном процессе
-    public class ProcessInfo
     {
         public ProcessInfo() // конструктор без параметров, нужен при старте проги
         {
             Name = string.Empty;
             PID = string.Empty;
-            Window = string.Empty;
+            //Window = string.Empty;
+            MainModule = string.Empty;
             ProcessModuleCollection = null;
+            ProcessThreadCollection = null;
         }
+        public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection, ProcessThreadCollection processThreadCollection, string mainModule)
         // конструктор с параметрами - должен пополняться по мере увеличения кол-ва необходимых полей
-        public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection)
         {
             Name = name;
             PID = pid;
-            Window = window;
+            //Window = window;
+            MainModule = mainModule;
             ProcessModuleCollection = processModuleCollection;
+            ProcessThreadCollection = processThreadCollection;
             foreach (ProcessModule module in processModuleCollection) // создаем список модулей, которые используются процессом
             {
                 _modulesNames.Add(module.FileName);
             }
+            foreach (ProcessThread thread in processThreadCollection)
+            {
+                _threadNames.Add(thread.Id.ToString());
+            }
         }
         List<string> _modulesNames = new List<string>();
+        List<string> _threadNames = new List<string>();
         public string Name { get; set; }
         public string PID { get; set; }
-        public string Window { get; set; }
+        //public string Window { get; set; }
+        public string MainModule { get; set; }
         ProcessModuleCollection ProcessModuleCollection { get; set; }
+        ProcessThreadCollection ProcessThreadCollection { get; set; }
         public List<string> ModulesNames { get => _modulesNames; }
+        public List<string> ThreadNames { get => _threadNames; }
     }
 }

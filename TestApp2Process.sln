@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp2Process", "TestApp2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Display", "Display\Display.csproj", "{3FF0B409-44AD-4BEA-A11B-4EFEEE787347}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyDisplay", "MyDisplay\MyDisplay.csproj", "{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,14 +31,6 @@ Global
 		{3FF0B409-44AD-4BEA-A11B-4EFEEE787347}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3FF0B409-44AD-4BEA-A11B-4EFEEE787347}.Release|x64.ActiveCfg = Release|x64
 		{3FF0B409-44AD-4BEA-A11B-4EFEEE787347}.Release|x64.Build.0 = Release|x64
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Debug|x64.Build.0 = Debug|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Release|x64.ActiveCfg = Release|Any CPU
-		{AF9A08D6-85F2-4FE8-8844-7CDC0AFC7332}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,7 +9,7 @@
         Title="MainWindow" Height="450" Width="800" >
     <Grid>
         <TabControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <TabItem Header="Programs" x:Name="Programs_Tab">
+            <TabItem Header="Process" x:Name="Programs_Tab">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="63*"/>
@@ -19,8 +19,8 @@
                         <RowDefinition Height="30"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Label Content="Program List" Grid.Column="0" Grid.Row="0"/>
-                    <Label Content="Program Info" Grid.Column="1" Grid.Row="0"/>
+                    <Label Content="Process List" Grid.Column="0" Grid.Row="0"/>
+                    <Label Content="Process Info" Grid.Column="1" Grid.Row="0" Margin="0,0,297,0"/>
                     <Grid x:Name="Grid_ProgramList" Grid.Column="0" Grid.Row="1">
                         <ListBox ItemsSource="{Binding Path=ProcessList}">
                             <ListBox.ItemTemplate>
@@ -42,7 +42,7 @@
                         </Grid.RowDefinitions>
                         <Label Content="{Binding SelectedProcessName}" Grid.Row="0" Grid.Column="0"/>
                         <Label Content="{Binding SelectedProcessPID}" Grid.Row="0" Grid.Column="1" Margin="80,0,0,0"/>
-                        <Label Content="{Binding PathProcess}" Grid.Row="1" Grid.Column="0"/>
+                        <Label Content="{Binding SelectedMainModule}" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"/>
                         <ListBox ItemsSource="{Binding Path=SelectedProcessModules}" Grid.Row="2" Margin="0,32,0,0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -51,9 +51,9 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                         <Label Content="Process Modules:" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Width="299" Height="32"/>
-                        <Button Content="Kill" Grid.Column="1" HorizontalAlignment="Left" Margin="161,5,0,0" Grid.Row="1" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+                        <Button Content="Kill" Grid.Column="1" HorizontalAlignment="Left" Margin="118,-25,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
                         <Label Content="Process Thread:" Grid.Column="1" HorizontalAlignment="Left" Margin="0,0,0,270" Grid.Row="2" VerticalAlignment="Bottom" Height="31" Width="298"/>
-                        <ListBox Grid.Column="1" HorizontalAlignment="Left" Height="270" Margin="0,31,0,0" Grid.Row="2" VerticalAlignment="Top" Width="298">
+                        <ListBox ItemsSource="{Binding Path=SelectedProcessThread}" Grid.Column="1" HorizontalAlignment="Left" Height="270" Margin="0,31,0,0" Grid.Row="2" VerticalAlignment="Top" Width="298">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding}"/>
@@ -64,7 +64,15 @@
                     </Grid>
                 </Grid>
             </TabItem>
-            <TabItem Header="Process">
+            <TabItem Header="Program">
+                <Grid Background="#FFE5E5E5">
+                    <Label Content="Аpplications:" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" Width="165"/>
+                    <Grid x:Name="ListBox2" Grid.Column="0" Margin="0,32,527,0">
+                        <ListBox Name="list" ItemsSource="{Binding Path=SelectedMainWindowTitle}"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Autoload">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
         </TabControl>
