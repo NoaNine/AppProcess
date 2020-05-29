@@ -65,7 +65,12 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Program">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid Background="#FFE5E5E5">
+                    <Label Content="Аpplications:" HorizontalAlignment="Left" VerticalAlignment="Top" Height="32" Width="165"/>
+                    <Grid x:Name="ListBox2" Grid.Column="0" Margin="0,32,527,0">
+                        <ListBox Name="list" ItemsSource="{Binding Path=SelectedMainWindowTitle}"/>
+                    </Grid>
+                </Grid>
             </TabItem>
             <TabItem Header="Autoload">
                 <Grid Background="#FFE5E5E5"/>
