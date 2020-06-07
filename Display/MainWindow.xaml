@@ -6,10 +6,19 @@
         xmlns:local="clr-namespace:Display"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" >
+        Title="ProcessView" Height="450" Width="800" >
     <Grid>
-        <TabControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <TabItem Header="Programs" x:Name="Programs_Tab">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="Настройки"/>
+            <MenuItem Header="Вид"/>
+            <MenuItem Header="Справка" />
+        </Menu>
+        <TabControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1">
+            <TabItem Header="Програмы" x:Name="Programs_Tab" Width="97">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="63*"/>
@@ -19,13 +28,29 @@
                         <RowDefinition Height="30"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Label Content="Program List" Grid.Column="0" Grid.Row="0"/>
-                    <Label Content="Program Info" Grid.Column="1" Grid.Row="0"/>
+                    <Label Content="Список програм" Grid.Column="0" Grid.Row="0"/>
+                    <Label Content="Информация о програме" Grid.Column="1" Grid.Row="0"/>
                     <Grid x:Name="Grid_ProgramList" Grid.Column="0" Grid.Row="1">
-                        <ListBox ItemsSource="{Binding Path=ProcessList}">
+                        <ListBox ItemsSource="{Binding Path=ProgramList}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding ProcessName}" GotFocus="TextBlock_GotFocus" MouseLeftButtonUp="TextBlock_GotFocus"/>
+                                    <TextBlock Text="{Binding ProcessName}" GotFocus="Grid_ProgramList_Focus" MouseLeftButtonUp="Grid_ProgramList_Focus">
+                                        <TextBlock.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Завершить дерево процессов"/>
+                                                <MenuItem Header="Перезапустить"/>
+                                                <Separator/>
+                                                <MenuItem Header="Перейти к процессу"/>
+                                                <MenuItem Header="Создать дамп"/>
+                                                <MenuItem Header="Приоритет"/>
+                                                <Separator/>
+                                                <MenuItem Header="Развернуть"/>
+                                                <MenuItem Header="На передний план"/>
+                                                <Separator/>
+                                                <MenuItem Header="Добавить в автозапуск"/>
+                                            </ContextMenu>
+                                        </TextBlock.ContextMenu>
+                                    </TextBlock>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -41,33 +66,176 @@
                             <RowDefinition />
                         </Grid.RowDefinitions>
                         <Label Content="{Binding SelectedProcessName}" Grid.Row="0" Grid.Column="0"/>
-                        <Label Content="{Binding SelectedProcessPID}" Grid.Row="0" Grid.Column="1" Margin="80,0,0,0"/>
-                        <Label Content="{Binding PathProcess}" Grid.Row="1" Grid.Column="0"/>
-                        <ListBox ItemsSource="{Binding Path=SelectedProcessModules}" Grid.Row="2" Margin="0,32,0,0">
+                        <Label Content="Процессы:" HorizontalAlignment="Left" Grid.Row="2" Grid.Column="0"/>
+                        <Label Content="Файлы:" HorizontalAlignment="Left" Grid.Row="2" Grid.Column="1"/>
+                        <ListBox Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Path=SelectedProcessModules}" Margin="0,32,0,0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding}"/>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <Label Content="Process Modules:" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Width="299" Height="32"/>
-                        <Button Content="Kill" Grid.Column="1" HorizontalAlignment="Left" Margin="161,5,0,0" Grid.Row="1" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
-                        <Label Content="Process Thread:" Grid.Column="1" HorizontalAlignment="Left" Margin="0,0,0,270" Grid.Row="2" VerticalAlignment="Bottom" Height="31" Width="298"/>
-                        <ListBox Grid.Column="1" HorizontalAlignment="Left" Height="270" Margin="0,31,0,0" Grid.Row="2" VerticalAlignment="Top" Width="298">
+                        <ListBox ItemsSource="{Binding SelectedProgramProcessList}" Grid.Row="2" Grid.Column="0" Margin="0,32,0,0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding}"/>
+                                    <TextBlock Text="{Binding ProcessName}" GotFocus="TextBlock_GotFocus" MouseLeftButtonUp="TextBlock_GotFocus">
+                                        <TextBlock.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Завершить мягко"/>
+                                                <MenuItem Header="Завершить жестко"/>
+                                                <Separator/>
+                                                <MenuItem Header="Открыть расположение файла"/>
+                                                <MenuItem Header="Перейти к ресурсопотреблению"/>
+                                                <Separator/>
+                                                <MenuItem Header="Создать дамп"/>
+                                                <MenuItem Header="Приоритет"/>
+                                                <Separator/>
+                                            </ContextMenu>
+                                        </TextBlock.ContextMenu>
+                                    </TextBlock>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <Label Content="Process PID:" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Height="30" Width="75"/>
                     </Grid>
                 </Grid>
             </TabItem>
-            <TabItem Header="Process">
+            <TabItem Header="Процессы" Width="97">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
+            <TabItem Header="Файлы" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="97">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="63*"/>
+                        <ColumnDefinition Width="199*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30" />
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.ColumnSpan="2" Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="126"/>
+                            <ColumnDefinition Width="106"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="2" Width="100" HorizontalAlignment="Center">
+                            <Button.Content>
+                                <TextBlock Text="Найти"/>
+                            </Button.Content>
+                        </Button>
+                        <Button Grid.Column="1" Width="120" HorizontalAlignment="Center" >
+                            <Button.Content>
+                                <TextBlock Text="Выбрать файл"/>
+                            </Button.Content>
+                        </Button>
+                        <TextBox Grid.Row="1" HorizontalAlignment="Stretch" >
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                                    <Style.Resources>
+                                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <Label Content="Параметры запуска" Foreground="LightGray" />
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Style.Resources>
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                            <Setter Property="Foreground" Value="Blue" />
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="{x:Null}">
+                                            <Setter Property="Foreground" Value="Blue" />
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter Property="Foreground" Value="Black" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+                    <Grid x:Name="Grid_FileList" Grid.Column="0" Grid.Row="1">
+                        <ListBox ItemsSource="{Binding Path=ProcessList}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding ProcessName}" GotFocus="TextBlock_GotFocus" MouseLeftButtonUp="TextBlock_GotFocus"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                    <ListBox Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Path=SelectedProcessModules}" >
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Сеть" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="97">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="Ресурсы" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="97">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="Пользователи" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="97">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="Автозапуск" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="97">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="30"/>
+                    </Grid.RowDefinitions>
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding AutoStartList}" AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Путь" Width="6*" Binding="{Binding Path=ExePath}"/>
+                            <DataGridTextColumn Header="Параметры коммандной строки" Width="6*" Binding="{Binding Path=ExeParams}"/>
+                            <DataGridCheckBoxColumn Header="Запуск" Width="2*" Binding="{Binding Path=Start}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="126"/>
+                            <ColumnDefinition Width="106"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="2" Width="100" HorizontalAlignment="Center">
+                            <Button.Content>
+                                <TextBlock Text="Добавить"/>
+                            </Button.Content>
+                        </Button>
+                        <Button Grid.Column="1" Width="120" HorizontalAlignment="Center" >
+                            <Button.Content>
+                                <TextBlock Text="Выбрать файл"/>
+                            </Button.Content>
+                        </Button>
+                        <TextBox Grid.Row="1" HorizontalAlignment="Stretch" >
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                                    <Style.Resources>
+                                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <Label Content="Параметры запуска" Foreground="LightGray" />
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Style.Resources>
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                            <Setter Property="Foreground" Value="Blue" />
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="{x:Null}">
+                                            <Setter Property="Foreground" Value="Blue" />
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter Property="Foreground" Value="Black" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>                    
+                </Grid>
+            </TabItem>
         </TabControl>
-
     </Grid>
 </Window>

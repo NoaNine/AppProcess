@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,27 +10,62 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Display
 {
+    public class AutoStart
+    {
+        public AutoStart(string exePath, string exeParams, bool start)
+        {
+            ExePath = exePath;
+            ExeParams = exeParams;
+            Start = start;
+        }
+
+        public string ExePath { get; set; }
+        public string ExeParams { get; set; }
+        public bool Start { get; set; }
+
+    }
     public partial class ProcessManager : Window, INotifyPropertyChanged
     {
         private List<Process> _processList = new List<Process>(); //список всех процессов
-        ProcessInfo _selectedProcess = new ProcessInfo(); // процесс, который выбран в списке по клику
+        private Dictionary<Process, List<Process>> _processTree = new Dictionary<Process, List<Process>>();
+        private List<Process> _programList = new List<Process>();
+        private ProcessInfo _selectedProcess = new ProcessInfo(); // процесс, который выбран в списке по клику
+        private Process _selectedProgram = new Process();
+        private List<AutoStart> _autoStart = new List<AutoStart> {  new AutoStart(@"C:\Users\админ\Downloads\Telegram\Telegram\Telegram.exe", "", true ),
+                                                            new AutoStart(@"C:\Program Files\AVAST Software\Avast\AvastUI.exe", "", true ),
+                                                            new AutoStart(@"C:\Program Files (x86)\Google\Picasa3\Picasa3.exe", "", true ),
+                                                            new AutoStart(@"C:\Users\админ\AppData\Local\Viber\Viber.exe", "", true ),
+                                                            new AutoStart(@"C:\Program Files (x86)\FinalWire\AIDA64 Extreme\aida64.exe", "/SILENCE", true )};
+        public List<AutoStart> AutoStartList { get => _autoStart; set { _autoStart = value; } }
+
         public List<Process> ProcessList { get => _processList; } // проперти, дает доступ к _processList
+        public List<Process> SelectedProgramProcessList
+        {
+            get
+            {
+                List<Process> res = new List<Process>();
+                _processTree.TryGetValue(_selectedProgram, out res);
+                return res;
+            }
+        }// проперти, дает доступ к _processList
+        public List<Process> ProgramList { get => _programList; } // проперти, дает доступ к _processList
         public ProcessInfo SelectedProcess { get => _selectedProcess; } // проперти, дает доступ к _selectedProcess
         public string SelectedProcessName // проперти, дает доступ имени выбранного процесса, нужен для биндинга к интерфейсу
         {
             get
             {
                 string result = "Process Name: " + _selectedProcess.Name;
+                return result;
+            }
+        }
+        public string SelectedMainModule // проперти, дает доступ имени выбранного процесса, нужен для биндинга к интерфейсу
+        {
+            get
+            {
+                string result = "Main Module: " + _selectedProcess.PathToExe;
                 return result;
             }
         }
@@ -41,16 +77,13 @@ namespace Display
                 return result;
             }
         }
-        /*public string PathProcess
-        {
-            get
-            {
-                string result = "Path:" + _selectedProcess;
-                return result;
-            }
-        }*/
+
+        
+
         public string SelectedProcessWindow { get => _selectedProcess.Window; } // проперти, нужен для биндинга к интерфейсу
         public List<string> SelectedProcessModules { get => _selectedProcess.ModulesNames; } // проперти, нужен для биндинга к интерфейсу
+        public Dictionary<Process, List<Process>> ProcessTree { get => _processTree; set => _processTree = value; }
+
         public ProcessManager()
         {
             InitializeComponent(); // инициализация интерфейса, сгенерировано вижуал студией
@@ -83,21 +116,69 @@ namespace Display
             while (true) // вечный цикл
             {
                 List<Process> processes = Process.GetProcesses().ToList(); // в новую переменную записываем все текущии процессы
-                if (_processList.Count == 0) // если список _processList был пуст - просто заполняем его
-                {
-                    _processList = processes;
-                    OnPropertyChanged("ProcessList"); // вызываем обновление полей, забинженых на проперти ProcessList
-                }
-                // если пересечение списков processes и _processList не равно количесву элементов в обоих этих списках, то значит список
-                // _processList просрочен и его надо обновит
-                else if (_processList.Intersect(processes).Count() != _processList.Count && _processList.Count != processes.Count)
-                {
-                    _processList = processes;
-                    OnPropertyChanged("ProcessList"); // вызываем обновление полей, забинженых на проперти ProcessList
-                }
-                Thread.Sleep(1000); // останавливаем поток на одну секунду
+                OnPropertyChanged("ProcessList");
+                if (Refresh(processes))
+                    RefreshProgramList();
             }
         }
+        private void RefreshProgramList() // метод, в котором происходит обновления списка процессов
+        {
+            _programList = new List<Process>();
+            List<Process> processes = Process.GetProcesses().ToList(); // в новую переменную записываем все текущии процессы
+            List<Process> programs = new List<Process>();
+            foreach (var process in processes)
+            {
+                if (!String.IsNullOrEmpty(process.MainWindowTitle))
+                {
+                    programs.Add(process);
+                    _programList.Add(process);
+                }
+            }
+            foreach (var process in _programList)
+            {
+                List<Process> list = new List<Process>();
+                try
+                {
+                    var modName = process.MainModule.ModuleName;
+                    foreach (var p in processes)
+                    {
+                        if (p.MainModule.ModuleName == modName)
+                            list.Add(p);
+                    }
+                    //var ap = processes.FindAll(p => p.MainModule.ModuleName == modName);
+                    _processTree.Add(process, list);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex.Message);
+                    _processTree.Add(process, list);
+                }
+            }
+            //if(Refresh(processes))
+            OnPropertyChanged("ProgramList");
+        }
+
+        private bool Refresh(List<Process> processes)
+        {
+            bool res = false;
+            if (_processList.Count == 0) // если список _processList был пуст - просто заполняем его
+            {
+                _processList = processes;
+                //OnPropertyChanged("ProcessList"); // вызываем обновление полей, забинженых на проперти ProcessList
+                res = true;
+            }
+            // если пересечение списков processes и _processList не равно количесву элементов в обоих этих списках, то значит список
+            // _processList просрочен и его надо обновит
+            else if (_processList.Intersect(processes).Count() != _processList.Count && _processList.Count != processes.Count)
+            {
+                _processList = processes;
+                //OnPropertyChanged("ProcessList"); // вызываем обновление полей, забинженых на проперти ProcessList
+                res = true;
+            }
+            Thread.Sleep(1000); // останавливаем поток на одну секунду
+            return res;
+        }
+
         // событие, вызываемое при клике на текст
         private void TextBlock_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -119,8 +200,36 @@ namespace Display
                         OnPropertyChanged("SelectedProcessPID");
                         OnPropertyChanged("SelectedProcessWindow");
                         OnPropertyChanged("SelectedProcessModules");
+                        OnPropertyChanged("SelectedMainModule");
                     }
                     catch(Exception ex)
+                    {
+                        Trace.WriteLine(ex.Message);
+                    }
+                }
+            }
+        }
+
+        private void Grid_ProgramList_Focus(object sender, RoutedEventArgs e)
+        {
+            TextBlock textBlock = (TextBlock)sender; // sender - объект, в котором произошел клик, т.е. TextBlock. 
+                                                     //По-этому sender мы можен привести к типу TextBlock 
+            if (textBlock != null) // если приведение типов прошло успешно
+            {
+                string processName = textBlock.Text; //берем имя вібранного процесса
+                Process selectedProgram = _programList.FirstOrDefault(process => process.ProcessName == processName); // находим в списке _processList
+                                                                                                                      // процесс с именем processName
+                if (selectedProgram != null) // если искомій процесс существует
+                {
+                    try
+                    {
+                        _selectedProgram = selectedProgram; // достаем инфу о процессе
+                        // уведомляем интерфейс о том, что даннsе измененs
+                        OnPropertyChanged("SelectedProgram");
+                        OnPropertyChanged("SelectedProgramName");
+                        OnPropertyChanged("SelectedProgramProcessList");
+                    }
+                    catch (Exception ex)
                     {
                         Trace.WriteLine(ex.Message);
                     }
@@ -133,7 +242,8 @@ namespace Display
     {
         public static ProcessInfo GetInfo (Process process)
         {
-            return new ProcessInfo(process.ProcessName, process.Id.ToString(), process.MainWindowTitle, process.Modules);
+            ProcessStartInfo processStartInfo = process.StartInfo;
+            return new ProcessInfo(process.ProcessName, process.Id.ToString(), process.MainWindowTitle, process.Modules, process.MainModule.FileName);
         }
 
     }
@@ -146,15 +256,17 @@ namespace Display
             Name = string.Empty;
             PID = string.Empty;
             Window = string.Empty;
+            PathToExe = string.Empty;
             ProcessModuleCollection = null;
         }
         // конструктор с параметрами - должен пополняться по мере увеличения кол-ва необходимых полей
-        public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection)
+        public ProcessInfo(string name, string pid, string window, ProcessModuleCollection processModuleCollection, string pathToExe)
         {
             Name = name;
             PID = pid;
             Window = window;
             ProcessModuleCollection = processModuleCollection;
+            PathToExe = pathToExe;
             foreach (ProcessModule module in processModuleCollection) // создаем список модулей, которые используются процессом
             {
                 _modulesNames.Add(module.FileName);
@@ -164,6 +276,7 @@ namespace Display
         public string Name { get; set; }
         public string PID { get; set; }
         public string Window { get; set; }
+        public string PathToExe { get; set; }
         ProcessModuleCollection ProcessModuleCollection { get; set; }
         public List<string> ModulesNames { get => _modulesNames; }
     }
